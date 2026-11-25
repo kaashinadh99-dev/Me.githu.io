@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050810">
+  <title>DIPIN RAJ // Cyber Lab</title>
+  <meta name="description" content="Dipin Raj - Cyber Lab Portfolio, projects, experiments and playable Dino Runner game.">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="booting">
+
+<!-- Background -->
+<div class="wallpaper"></div>
+<div class="wallpaper-overlay"></div>
+<div class="grid-background"></div>
+<div class="scanlines"></div>
+<div class="ambient ambient-a"></div>
+<div class="ambient ambient-b"></div>
+<canvas id="particleCanvas"></canvas>
+
+<!-- BOOT SCREEN -->
+<section id="bootScreen" class="boot-screen">
+
+  <div class="boot-header">
+    <div class="boot-brand"><span>DR</span> // CYBER LAB</div>
+    <div class="boot-live"><i></i> SYSTEM READY</div>
+  </div>
+
+  <div class="boot-content">
+    <div class="boot-orb">
+      <div class="orb-ring ring1"></div>
+      <div class="orb-ring ring2"></div>
+      <div class="orb-ring ring3"></div>
+      <div class="orb-core">DR</div>
+    </div>
+
+    <div class="boot-label">WELCOME TO MY DIGITAL WORLD</div>
+    <h1 class="boot-name">DIPIN <span>RAJ</span></h1>
+    <p class="boot-subtitle">PERSONAL CYBER LAB // PORTFOLIO</p>
+
+    <div class="boot-terminal">
+      <div class="terminal-head">
+        <span>root@dipin-lab:~</span>
+        <span>SECURE SESSION</span>
+      </div>
+      <div id="bootLog" class="boot-log"></div>
+    </div>
+
+    <button id="launchButton" class="launch-button">
+      <span class="launch-arrow">▶</span>
+      <span>ENTER THE LAB</span>
+    </button>
+
+    <div class="boot-note">TAP TO INITIALIZE SYSTEM & AUDIO</div>
+  </div>
+
+  <div class="boot-footer">
+    <span>SYS 02.6</span>
+    <span>ENCRYPTION ACTIVE</span>
+    <span>© DIPIN RAJ</span>
+  </div>
+</section>
+
+<!-- MAIN SITE -->
+<div id="mainSite" class="main-site">
+
+<header class="topbar">
+  <a href="#home" class="brand">
+    <div class="brand-mark">DR<span>_</span></div>
+    <div>
+      <strong>DIPIN RAJ</strong>
+      <small>CYBER LAB / PORTFOLIO</small>
+    </div>
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="#home">HOME</a>
+    <a href="#about">ABOUT</a>
+    <a href="#skills">SKILLS</a>
+    <a href="#projects">PROJECTS</a>
+    <a href="#game">GAME LAB</a>
+    <a href="#contact">CONTACT</a>
+  </nav>
+
+  <div class="nav-controls">
+    <button id="soundToggle" class="sound-toggle" title="Toggle audio">
+      <span id="soundIcon">🔊</span>
+      <small id="soundLabel">AUDIO</small>
+    </button>
+
+    <span class="online"><i></i> ONLINE</span>
+
+    <button id="menuButton" class="menu-button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<nav id="mobileMenu" class="mobile-menu">
+  <a href="#home">01 // HOME</a>
+  <a href="#about">02 // ABOUT</a>
+  <a href="#skills">03 // SKILLS</a>
+  <a href="#projects">04 // PROJECTS</a>
+  <a href="#game">05 // GAME LAB</a>
+  <a href="#contact">06 // CONTACT</a>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<section id="home" class="section hero">
+
+  <div class="hero-copy reveal">
+    <div class="system-chip"><i></i> SYSTEM ONLINE // CREATIVE MODE</div>
+
+    <p class="eyebrow">HELLO, I'M</p>
+
+    <h1 class="hero-title">
+      DIPIN<br><span>RAJ</span><b class="blink">_</b>
+    </h1>
+
+    <div class="hero-role">
+      DEVELOPER <span>//</span> BUILDER <span>//</span> CREATOR
+    </div>
+
+    <p class="hero-description">
+      Exploring technology, building digital experiences,
+      experimenting with code and transforming ideas into reality.
+    </p>
+
+    <div class="hero-actions">
+      <a class="button button-primary" href="#projects">EXPLORE PROJECTS ↗</a>
+      <a class="button button-outline" href="#contact">CONNECT WITH ME</a>
+    </div>
+
+    <div class="stats">
+      <div><strong>03<span>+</span></strong><small>PROJECTS</small></div>
+      <div><strong>08<span>+</span></strong><small>TECH SKILLS</small></div>
+      <div><strong>∞</strong><small>IDEAS</small></div>
+    </div>
+  </div>
+
+  <div class="profile-hud reveal">
+    <div class="hud-header"><span>PROFILE / 001</span><span>● LIVE</span></div>
+
+    <div class="profile-avatar">
+      <div class="avatar-rings"></div>
+      <div class="avatar-initials">DR</div>
+      <div class="avatar-scanline"></div>
+    </div>
+
+    <h2>DIPIN RAJ</h2>
+    <p class="hud-subtitle">INDEPENDENT DIGITAL CREATOR</p>
+
+    <div class="hud-info">
+      <div><span>LOCATION</span><b>KERALA, INDIA</b></div>
+      <div><span>STATUS</span><b class="green">AVAILABLE</b></div>
+      <div><span>MODE</span><b>CREATIVE</b></div>
+    </div>
+
+    <div class="equalizer">
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="hud-footer"><span>PROFILE VERIFIED</span><span>DR_001</span></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="section">
+  <div class="section-title reveal">
+    <div><small>01 / PROFILE MODULE</small><h2>ABOUT <span>ME</span></h2></div>
+    <span class="section-code">IDENTITY.EXE</span>
+  </div>
+
+  <div class="about-grid">
+    <article class="glass about-main reveal">
+      <span class="accent-symbol">◈</span>
+      <h3>Curious Mind.<br>Creative Builder.</h3>
+      <p>
+        I enjoy exploring technology, developing applications,
+        experimenting with interfaces and learning how digital systems work.
+      </p>
+      <p>
+        From music applications and automation to web experiences,
+        I enjoy turning creative ideas into functional projects.
+      </p>
+      <div class="tags"><span>TECH</span><span>CREATIVITY</span><span>EXPERIMENTS</span></div>
+    </article>
+
+    <article class="glass info-card reveal">
+      <small class="card-label">PERSONAL DATA</small>
+      <div class="info-row"><span>NAME</span><b>Dipin Raj</b></div>
+      <div class="info-row"><span>FIELD</span><b>Software & Digital</b></div>
+      <div class="info-row"><span>LOCATION</span><b>Kerala, India</b></div>
+      <div class="info-row"><span>INTEREST</span><b>Technology</b></div>
+      <div class="info-row"><span>STATUS</span><b class="green">Learning</b></div>
+    </article>
+
+    <article class="glass mini-card reveal">
+      <span>⌘</span><h3>BUILD</h3><p>Creating functional digital projects.</p>
+    </article>
+    <article class="glass mini-card reveal">
+      <span>⌬</span><h3>EXPLORE</h3><p>Discovering new technologies.</p>
+    </article>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="section">
+  <div class="section-title reveal">
+    <div><small>02 / CAPABILITIES</small><h2>TECH <span>STACK</span></h2></div>
+    <span class="section-code">SKILL_MATRIX</span>
+  </div>
+
+  <div class="skills-grid">
+    <article class="glass skill reveal"><div><b>Py</b><h3>Python</h3></div><div class="meter"><i style="width:85%"></i></div></article>
+    <article class="glass skill reveal"><div><b>H</b><h3>HTML / CSS</h3></div><div class="meter"><i style="width:90%"></i></div></article>
+    <article class="glass skill reveal"><div><b>JS</b><h3>JavaScript</h3></div><div class="meter"><i style="width:75%"></i></div></article>
+    <article class="glass skill reveal"><div><b>API</b><h3>API Integration</h3></div><div class="meter"><i style="width:80%"></i></div></article>
+    <article class="glass skill reveal"><div><b>UI</b><h3>UI / UX</h3></div><div class="meter"><i style="width:78%"></i></div></article>
+    <article class="glass skill reveal"><div><b>Fl</b><h3>Flask</h3></div><div class="meter"><i style="width:70%"></i></div></article>
+    <article class="glass skill reveal"><div><b>Git</b><h3>GitHub</h3></div><div class="meter"><i style="width:80%"></i></div></article>
+    <article class="glass skill reveal"><div><b>Au</b><h3>Automation</h3></div><div class="meter"><i style="width:75%"></i></div></article>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" class="section">
+  <div class="section-title reveal">
+    <div><small>03 / DEVELOPMENT</small><h2>MY <span>PROJECTS</span></h2></div>
+    <span class="section-code">PROJECT_DATABASE</span>
+  </div>
+
+  <div class="projects-grid">
+    <article class="glass project reveal">
+      <div class="project-meta"><span>AUDIO / AUTOMATION</span><small>PRJ_01</small></div>
+      <div class="project-icon pink">♫</div>
+      <h3>CLUBBY MUSIC</h3>
+      <p>Music automation, song requests, queue management and room music experiences.</p>
+      <div class="tags"><span>PYTHON</span><span>API</span><span>AUTOMATION</span></div>
+      <a href="https://github.com/kaashi143" target="_blank" rel="noopener">VIEW PROJECT ↗</a>
+    </article>
+
+    <article class="glass project reveal">
+      <div class="project-meta"><span>WEB / MUSIC</span><small>PRJ_02</small></div>
+      <div class="project-icon green">◉</div>
+      <h3>PULSE MUSIC</h3>
+      <p>Spotify remote interface featuring playback controls and responsive music UI.</p>
+      <div class="tags"><span>FLASK</span><span>SPOTIFY</span><span>JS</span></div>
+      <a href="https://github.com/kaashi143" target="_blank" rel="noopener">VIEW PROJECT ↗</a>
+    </article>
+
+    <article class="glass project reveal">
+      <div class="project-meta"><span>EXPERIMENTAL</span><small>PRJ_03</small></div>
+      <div class="project-icon">⌘</div>
+      <h3>CODE EXPERIMENTS</h3>
+      <p>Prototypes, scripts, interface concepts and creative technology explorations.</p>
+      <div class="tags"><span>PYTHON</span><span>WEB</span><span>CREATIVE</span></div>
+      <a href="https://github.com/kaashi143" target="_blank" rel="noopener">VIEW GITHUB ↗</a>
+    </article>
+  </div>
+</section>
+
+<!-- GAME LAB -->
+<section id="game" class="section game-section">
+  <div class="section-title reveal">
+    <div><small>04 / INTERACTIVE ENTERTAINMENT</small><h2>GAME <span>LAB</span></h2></div>
+    <span class="section-code">RUNNER.EXE</span>
+  </div>
+
+  <article class="glass game-card reveal">
+    <div class="game-header">
+      <div>
+        <span class="game-status"><i></i> ARCADE SYSTEM READY</span>
+        <h3>CYBER DINO RUNNER</h3>
+        <p>Jump over obstacles. Duck under incoming drones. Survive as long as you can.</p>
+      </div>
+      <div class="game-icon">▰</div>
+    </div>
+
+    <div class="game-scorebar">
+      <div><small>HI-SCORE</small><strong id="highScore">00000</strong></div>
+      <div><small>SCORE</small><strong id="gameScore">00000</strong></div>
+      <div><small>SPEED</small><strong id="gameSpeed">1.0x</strong></div>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="800" height="300" aria-label="Cyber Dino Runner game"></canvas>
+      <div id="gameOverlay" class="game-overlay">
+        <div class="overlay-content">
+          <div class="overlay-symbol">▶</div>
+          <h3 id="gameOverlayTitle">DINO RUNNER</h3>
+          <p id="gameOverlayText">Press start to begin your run.</p>
+          <button id="gameStartButton" class="button button-primary">START GAME</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-instructions">
+      <span><kbd>SPACE</kbd> / <kbd>↑</kbd> JUMP</span>
+      <span><kbd>↓</kbd> DUCK / FAST FALL</span>
+      <span>TOUCH CONTROLS AVAILABLE</span>
+    </div>
+
+    <div class="game-touch-controls">
+      <button id="duckButton" class="touch-button">▼ DUCK</button>
+      <button id="jumpButton" class="touch-button jump-button">▲ JUMP</button>
+    </div>
+
+    <div class="game-footer">
+      <span>GAME ENGINE // HTML5 CANVAS</span>
+      <button id="restartGameButton" class="restart-button">↻ RESTART</button>
+    </div>
+  </article>
+</section>
+
+<!-- JOURNEY -->
+<section id="journey" class="section">
+  <div class="section-title reveal">
+    <div><small>05 / PROGRESS</small><h2>MY <span>JOURNEY</span></h2></div>
+    <span class="section-code">LEARNING_LOG</span>
+  </div>
+
+  <div class="glass timeline reveal">
+    <div class="timeline-item">
+      <i></i><small>ONGOING</small>
+      <h3>Software & Application Development</h3>
+      <p>Exploring Python, application development, APIs and automation.</p>
+    </div>
+    <div class="timeline-item">
+      <i></i><small>ONGOING</small>
+      <h3>Web Development</h3>
+      <p>Building responsive web experiences with HTML, CSS and JavaScript.</p>
+    </div>
+    <div class="timeline-item">
+      <i></i><small>ONGOING</small>
+      <h3>Creative Technology</h3>
+      <p>Developing new ideas, experimenting and improving digital projects.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="section">
+  <div class="section-title reveal">
+    <div><small>06 / COMMUNICATION</small><h2>CONTACT <span>ME</span></h2></div>
+    <span class="section-code">CONNECTION_TERMINAL</span>
+  </div>
+
+  <div class="contact-grid">
+    <article class="glass contact-terminal reveal">
+      <div class="terminal-top"><span>root@dipin:~</span><span>● ● ●</span></div>
+      <div class="terminal-content">
+        <p><span>$</span> whoami</p><h3>Dipin Raj</h3>
+        <p><span>$</span> location</p><p>Kerala, India</p>
+        <p><span>$</span> status</p><p class="green">Open to conversations</p>
+        <p><span>$</span> connect</p>
+      </div>
+      <div class="contact-links">
+        <a href="https://github.com/kaashi143" target="_blank" rel="noopener">⌘ GITHUB ↗</a>
+        <a href="https://instagram.com/3rr0r504" target="_blank" rel="noopener">◎ INSTAGRAM ↗</a>
+        <a href="mailto:dipinraj@example.com">✉ EMAIL ↗</a>
+      </div>
+    </article>
+
+    <article class="glass contact-form reveal">
+      <small class="card-label">TRANSMIT A MESSAGE</small>
+      <form id="contactForm">
+        <label for="contactName">YOUR NAME</label>
+        <input id="contactName" required placeholder="Your name">
+
+        <label for="contactEmail">EMAIL</label>
+        <input id="contactEmail" type="email" required placeholder="Your email">
+
+        <label for="contactMessage">MESSAGE</label>
+        <textarea id="contactMessage" rows="5" required placeholder="Write your message..."></textarea>
+
+        <button class="button button-primary" type="submit">TRANSMIT ↗</button>
+        <p id="formStatus"></p>
+      </form>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-brand"><div class="brand-mark">DR<span>_</span></div><p>CYBER LAB // DIPIN RAJ</p></div>
+  <p>© 2026 DIPIN RAJ // BUILT WITH ♥</p>
+  <a href="#home">BACK TO TOP ↑</a>
+</footer>
+
+<nav class="bottom-nav">
+  <a href="#home"><span>⌂</span><small>HOME</small></a>
+  <a href="#about"><span>◈</span><small>ABOUT</small></a>
+  <a href="#skills"><span>⌘</span><small>SKILLS</small></a>
+  <a href="#projects"><span>▣</span><small>WORK</small></a>
+  <a href="#game"><span>🎮</span><small>GAME</small></a>
+  <a href="#contact"><span>✉</span><small>CONTACT</small></a>
+</nav>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
