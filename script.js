@@ -1,1104 +1,1466 @@
-
-/* ==================================================
-   DIPIN RAJ CYBER LAB
-   BOOT / AUDIO / PARTICLES / PORTFOLIO / DINO GAME
-================================================== */
+/* =========================================================
+   CYBER LAB PORTFOLIO
+   Developed by Kaashinadh
+   Launch fix + particles + audio + navigation + game
+========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-  const $ = id => document.getElementById(id);
+    // =====================================================
+    // HELPERS
+    // =====================================================
 
-  /* ==================================================
-     SYSTEM ELEMENTS
-  ================================================== */
+    const $ = (id) => document.getElementById(id);
 
-  const bootScreen = $("bootScreen");
-  const mainSite = $("mainSite");
-  const launchButton = $("launchButton");
-
-  const soundToggle = $("soundToggle");
-  const soundIcon = $("soundIcon");
-  const soundLabel = $("soundLabel");
-
-  const menuButton = $("menuButton");
-  const mobileMenu = $("mobileMenu");
-
-  const toast = $("toast");
-
-  let launched = false;
-  let soundEnabled = true;
-  let audioContext = null;
-  let toastTimeout;
-
-  /* ==================================================
-     AUDIO ENGINE
-  ================================================== */
-
-  function getAudio() {
-    if (!audioContext) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      audioContext = new AC();
-    }
-    return audioContext;
-  }
-
-  function tone(freq, endFreq, duration, type = "sine", volume = .04, delay = 0) {
-    if (!soundEnabled) return;
-
-    const ctx = getAudio();
-    if (!ctx) return;
-
-    if (ctx.state === "suspended") ctx.resume();
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-
-    if (endFreq) {
-      osc.frequency.exponentialRampToValueAtTime(
-        Math.max(1, endFreq),
-        ctx.currentTime + delay + duration
-      );
-    }
-
-    gain.gain.setValueAtTime(.0001, ctx.currentTime + delay);
-    gain.gain.exponentialRampToValueAtTime(
-      volume,
-      ctx.currentTime + delay + .02
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      .0001,
-      ctx.currentTime + delay + duration
-    );
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(ctx.currentTime + delay);
-    osc.stop(ctx.currentTime + delay + duration + .04);
-  }
-
-  function startupSound() {
-    tone(70, 240, .6, "sawtooth", .035, 0);
-    tone(500, 1700, .2, "square", .018, .3);
-    tone(1500, 450, .15, "square", .014, .55);
-    tone(440, 440, .12, "sine", .05, .8);
-    tone(660, 660, .14, "sine", .05, .95);
-    tone(880, 880, .25, "sine", .055, 1.1);
-    tone(1000, 1700, .18, "triangle", .035, 1.35);
-  }
-
-  function clickSound() {
-    tone(900, 600, .06, "square", .012);
-  }
-
-  function jumpSound() {
-    tone(320, 700, .1, "sine", .025);
-  }
-
-  function crashSound() {
-    tone(180, 50, .45, "sawtooth", .055);
-    tone(90, 35, .35, "square", .025, .1);
-  }
-
-  function scoreSound() {
-    tone(900, 1200, .06, "sine", .025);
-  }
-
-  /* ==================================================
-     BOOT TERMINAL TYPING
-  ================================================== */
-
-  const bootLog = $("bootLog");
-
-  const bootMessages = [
-    "Initializing cyber interface...",
-    "Loading digital environment...",
-    "Establishing secure session...",
-    "Loading portfolio modules...",
-    "Interactive game engine detected...",
-    "SYSTEM READY // Awaiting access"
-  ];
-
-  let bootLine = 0;
-
-  function typeBootLine() {
-    if (!bootLog || bootLine >= bootMessages.length) return;
-
-    const line = document.createElement("p");
-
-    const ok = document.createElement("span");
-    ok.className = bootLine === bootMessages.length - 1 ? "warning" : "ok";
-    ok.textContent = bootLine === bootMessages.length - 1 ? "[ READY ] " : "[ OK ] ";
-
-    line.appendChild(ok);
-    line.appendChild(document.createTextNode(bootMessages[bootLine]));
-
-    bootLog.appendChild(line);
-    bootLine++;
-
-    setTimeout(typeBootLine, 480);
-  }
-
-  typeBootLine();
-
-  /* ==================================================
-     LAUNCH
-  ================================================== */
-
-  launchButton.addEventListener("click", async () => {
-
-    if (launched) return;
-    launched = true;
-
-    launchButton.disabled = true;
-    launchButton.innerHTML = "INITIALIZING SYSTEM...";
-
-    if (soundEnabled) {
-      const ctx = getAudio();
-      if (ctx && ctx.state === "suspended") await ctx.resume();
-      startupSound();
-    }
-
-    setTimeout(() => {
-      bootScreen.classList.add("hide");
-      mainSite.classList.add("show");
-      document.body.classList.remove("booting");
-      showToast("ACCESS GRANTED // WELCOME TO CYBER LAB");
-    }, 600);
-
-  });
-
-  /* ==================================================
-     SOUND BUTTON
-  ================================================== */
-
-  function updateSoundUI() {
-    soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
-    soundLabel.textContent = soundEnabled ? "AUDIO" : "MUTED";
-  }
-
-  soundToggle.addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-    updateSoundUI();
-
-    if (soundEnabled && launched) {
-      tone(600, 1000, .12, "sine", .04);
-    }
-
-    showToast(soundEnabled ? "AUDIO SYSTEM ACTIVE" : "AUDIO MUTED");
-  });
-
-  updateSoundUI();
-
-  /* ==================================================
-     MOBILE MENU
-  ================================================== */
-
-  menuButton.addEventListener("click", () => {
-    mobileMenu.classList.toggle("open");
-    clickSound();
-  });
-
-  mobileMenu.querySelectorAll("a").forEach(a => {
-    a.addEventListener("click", () => {
-      mobileMenu.classList.remove("open");
-      clickSound();
-    });
-  });
-
-  /* ==================================================
-     TOAST
-  ================================================== */
-
-  function showToast(message) {
-    if (!toast) return;
-
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    clearTimeout(toastTimeout);
-
-    toastTimeout = setTimeout(() => {
-      toast.classList.remove("show");
-    }, 2600);
-  }
-
-  /* ==================================================
-     NAVIGATION ACTIVE STATE
-  ================================================== */
-
-  const navLinks = document.querySelectorAll(
-    ".desktop-nav a, .bottom-nav a"
-  );
-
-  const sections = document.querySelectorAll("main section[id]");
-
-  function setActive(id) {
-    navLinks.forEach(link => {
-      link.classList.toggle(
-        "active",
-        link.getAttribute("href") === "#" + id
-      );
-    });
-  }
-
-  if ("IntersectionObserver" in window) {
-
-    const navObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          setActive(entry.target.id);
+    const safeAddEvent = (element, event, callback, options) => {
+        if (element) {
+            element.addEventListener(event, callback, options);
         }
-      });
-    }, {
-      threshold: .25,
-      rootMargin: "-15% 0px -40% 0px"
-    });
-
-    sections.forEach(section => navObserver.observe(section));
-  }
-
-  navLinks.forEach(link => {
-    link.addEventListener("mouseenter", () => {
-      if (launched) tone(1000, 800, .025, "sine", .008);
-    });
-    link.addEventListener("click", clickSound);
-  });
-
-  /* ==================================================
-     SCROLL REVEALS
-  ================================================== */
-
-  const revealItems = document.querySelectorAll(".reveal");
-
-  if ("IntersectionObserver" in window) {
-    const revealObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: .12 });
-
-    revealItems.forEach(el => revealObserver.observe(el));
-  } else {
-    revealItems.forEach(el => el.classList.add("visible"));
-  }
-
-  /* ==================================================
-     NEON PARTICLE SYSTEM
-  ================================================== */
-
-  const particleCanvas = $("particleCanvas");
-  const particleCtx = particleCanvas.getContext("2d");
-
-  let particles = [];
-  let mouse = { x: null, y: null };
-  let particleWidth = 0;
-  let particleHeight = 0;
-
-  function resizeParticles() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    particleWidth = window.innerWidth;
-    particleHeight = window.innerHeight;
-
-    particleCanvas.width = particleWidth * dpr;
-    particleCanvas.height = particleHeight * dpr;
-
-    particleCanvas.style.width = particleWidth + "px";
-    particleCanvas.style.height = particleHeight + "px";
-
-    particleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const amount = Math.min(
-      75,
-      Math.floor(particleWidth / 13)
-    );
-
-    particles = Array.from({ length: amount }, () => ({
-      x: Math.random() * particleWidth,
-      y: Math.random() * particleHeight,
-      vx: (Math.random() - .5) * .35,
-      vy: (Math.random() - .5) * .35,
-      size: Math.random() * 2 + .4
-    }));
-  }
-
-  // Alias for canvas context
-  const particleCtx = particleCtxSafe();
-
-  function particleCtxSafe() {
-    return particleCanvas.getContext("2d");
-  }
-
-  resizeParticles();
-  window.addEventListener("resize", resizeParticles);
-
-  window.addEventListener("mousemove", e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-
-  window.addEventListener("touchmove", e => {
-    if (e.touches.length) {
-      mouse.x = e.touches[0].clientX;
-      mouse.y = e.touches[0].clientY;
-    }
-  }, { passive: true });
-
-  function drawParticles() {
-
-    particleCtx.clearRect(0, 0, particleWidth, particleHeight);
-
-    particles.forEach(p => {
-
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.x < 0 || p.x > particleWidth) p.vx *= -1;
-      if (p.y < 0 || p.y > particleHeight) p.vy *= -1;
-
-      if (mouse.x !== null) {
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < 100 && distance > 0) {
-          p.x += dx / distance * .6;
-          p.y += dy / distance * .6;
-        }
-      }
-
-      particleCtx.beginPath();
-      particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      particleCtx.fillStyle = "rgba(0,240,255,.65)";
-      particleCtx.fill();
-
-    });
-
-    // Connection lines
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 95) {
-          particleCtx.beginPath();
-          particleCtx.moveTo(particles[i].x, particles[i].y);
-          particleCtx.lineTo(particles[j].x, particles[j].y);
-          particleCtx.strokeStyle =
-            `rgba(0,240,255,${.09 * (1 - dist / 95)})`;
-          particleCtx.stroke();
-        }
-      }
-    }
-
-    requestAnimationFrame(drawParticles);
-  }
-
-  drawParticles();
-
-  /* ==================================================
-     CONTACT FORM
-     MAILTO METHOD
-  ================================================== */
-
-  $("contactForm").addEventListener("submit", e => {
-    e.preventDefault();
-
-    const name = $("contactName").value.trim();
-    const email = $("contactEmail").value.trim();
-    const message = $("contactMessage").value.trim();
-
-    if (!name || !email || !message) {
-      $("formStatus").textContent = "ERROR: COMPLETE ALL FIELDS.";
-      return;
-    }
-
-    // Replace this with your actual email address
-    const destination = "dipinraj@example.com";
-
-    const subject = encodeURIComponent("Portfolio Contact - " + name);
-
-    const body = encodeURIComponent(
-      "Name: " + name +
-      "\nEmail: " + email +
-      "\n\nMessage:\n" + message
-    );
-
-    $("formStatus").textContent = "OPENING EMAIL CLIENT...";
-
-    window.location.href =
-      "mailto:" + destination +
-      "?subject=" + subject +
-      "&body=" + body;
-  });
-
-  /* ==================================================
-     GAME: CYBER DINO RUNNER
-     HTML5 CANVAS IMPLEMENTATION OF YOUR PYTHON GAME
-  ================================================== */
-
-  const canvas = $("gameCanvas");
-  const ctx = canvas.getContext("2d");
-
-  const GAME_WIDTH = 800;
-  const GAME_HEIGHT = 300;
-  const GROUND_Y = 245;
-
-  const GRAVITY = .85;
-  const JUMP_VELOCITY = -14.5;
-  const FAST_FALL_GRAVITY = 2.2;
-  const INITIAL_SPEED = 7;
-  const MAX_SPEED = 18;
-
-  let gameRunning = false;
-  let gameOver = false;
-  let gameStarted = false;
-
-  let score = 0;
-  let speed = INITIAL_SPEED;
-  let spawnTimer = 70;
-  let obstacles = [];
-  let lastTime = 0;
-  let animationId = null;
-
-  let highScore = Number(localStorage.getItem("cyberDinoHighScore") || 0);
-
-  $("highScore").textContent = String(highScore).padStart(5, "0");
-
-  /* --------------------------------------------------
-     DINO PLAYER
-  -------------------------------------------------- */
-
-  const dino = {
-    x: 70,
-    standW: 34,
-    standH: 46,
-    duckW: 48,
-    duckH: 26,
-    y: GROUND_Y - 46,
-    velY: 0,
-    jumping: false,
-    ducking: false,
-    legTimer: 0,
-
-    get rect() {
-      if (this.ducking && !this.jumping) {
-        return {
-          x: this.x,
-          y: GROUND_Y - this.duckH,
-          w: this.duckW,
-          h: this.duckH
-        };
-      }
-
-      return {
-        x: this.x,
-        y: this.y,
-        w: this.standW,
-        h: this.standH
-      };
-    },
-
-    jump() {
-      if (!gameRunning || this.jumping) return;
-
-      this.velY = JUMP_VELOCITY;
-      this.jumping = true;
-      this.ducking = false;
-
-      jumpSound();
-    },
-
-    setDuck(value) {
-      this.ducking = value;
-    },
-
-    update(dt) {
-      const factor = dt / 16.667;
-
-      if (this.jumping) {
-
-        const gravity = this.ducking
-          ? FAST_FALL_GRAVITY
-          : GRAVITY;
-
-        this.velY += gravity * factor;
-        this.y += this.velY * factor;
-
-        if (this.y >= GROUND_Y - this.standH) {
-          this.y = GROUND_Y - this.standH;
-          this.velY = 0;
-          this.jumping = false;
-        }
-      }
-
-      this.legTimer += factor;
-    }
-  };
-
-  /* --------------------------------------------------
-     OBSTACLES
-  -------------------------------------------------- */
-
-  function createObstacle(kind) {
-
-    const obs = {
-      kind,
-      x: GAME_WIDTH + 20,
-      wingTimer: 0
     };
 
-    if (kind === "cactus_small") {
-      obs.w = 22;
-      obs.h = 42;
-      obs.y = GROUND_Y - obs.h;
+    // =====================================================
+    // 1. CYBER LAB BOOT / LAUNCH
+    // =====================================================
+
+    const bootScreen = $("bootScreen");
+    const mainSite = $("mainSite");
+    const launchButton = $("launchButton");
+
+    let labLaunched = false;
+
+    function launchLab() {
+        if (labLaunched) return;
+        labLaunched = true;
+
+        console.log("CYBER LAB: Launch sequence initiated");
+
+        // Reveal the portfolio first
+        if (mainSite) {
+            mainSite.style.display = "block";
+            mainSite.style.visibility = "visible";
+
+            requestAnimationFrame(() => {
+                mainSite.classList.add("show");
+            });
+        }
+
+        // Hide boot screen
+        if (bootScreen) {
+            bootScreen.classList.add("boot-exit");
+        }
+
+        document.body.classList.add("lab-active");
+
+        // Complete transition
+        setTimeout(() => {
+            if (bootScreen) {
+                bootScreen.style.display = "none";
+                bootScreen.setAttribute("aria-hidden", "true");
+            }
+
+            if (mainSite) {
+                mainSite.style.opacity = "1";
+                mainSite.style.visibility = "visible";
+            }
+
+            // Start/reveal animations after launch
+            window.dispatchEvent(new Event("portfolio-launched"));
+
+            // Initialize particles if they haven't started
+            initParticles();
+
+            console.log("CYBER LAB: System online");
+        }, 750);
+
+        playBootSound();
+        showToast("SYSTEM ONLINE — WELCOME TO THE LAB");
     }
-    else if (kind === "cactus_cluster") {
-      obs.w = 46;
-      obs.h = 36;
-      obs.y = GROUND_Y - obs.h;
+
+    safeAddEvent(launchButton, "click", launchLab);
+
+    // Optional: allow Enter key on boot screen
+    safeAddEvent(document, "keydown", (event) => {
+        if (!labLaunched && event.key === "Enter") {
+            launchLab();
+        }
+    });
+
+    // =====================================================
+    // 2. AUDIO ENGINE
+    // =====================================================
+
+    let audioContext = null;
+    let soundEnabled = true;
+
+    const soundToggle = $("soundToggle");
+    const soundIcon = $("soundIcon");
+    const soundLabel = $("soundLabel");
+
+    function getAudioContext() {
+        if (!audioContext) {
+            const AudioContextClass =
+                window.AudioContext || window.webkitAudioContext;
+
+            if (AudioContextClass) {
+                audioContext = new AudioContextClass();
+            }
+        }
+
+        if (audioContext && audioContext.state === "suspended") {
+            audioContext.resume().catch(() => {});
+        }
+
+        return audioContext;
     }
-    else {
-      obs.w = 38;
-      obs.h = 24;
 
-      const altitudes = [
-        GROUND_Y - 26,
-        GROUND_Y - 52,
-        GROUND_Y - 82
-      ];
+    function playTone(
+        frequency = 440,
+        duration = 0.12,
+        volume = 0.04,
+        type = "sine"
+    ) {
+        if (!soundEnabled) return;
 
-      obs.y = altitudes[Math.floor(Math.random() * altitudes.length)];
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(
+                frequency,
+                ctx.currentTime
+            );
+
+            gain.gain.setValueAtTime(volume, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                ctx.currentTime + duration
+            );
+
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+
+            oscillator.start();
+            oscillator.stop(ctx.currentTime + duration);
+        } catch (error) {
+            console.warn("Audio error:", error);
+        }
     }
 
-    obs.rect = function() {
-      return {
-        x: this.x + 3,
-        y: this.y + 3,
-        w: this.w - 6,
-        h: this.h - 6
-      };
-    };
+    function playBootSound() {
+        if (!soundEnabled) return;
 
-    return obs;
-  }
+        playTone(330, 0.12, 0.04, "sine");
 
-  /* --------------------------------------------------
-     COLLISION
-  -------------------------------------------------- */
+        setTimeout(() => playTone(440, 0.12, 0.04, "sine"), 100);
+        setTimeout(() => playTone(660, 0.2, 0.05, "sine"), 220);
+        setTimeout(() => playTone(880, 0.3, 0.035, "triangle"), 400);
+    }
 
-  function intersects(a, b) {
-    return (
-      a.x < b.x + b.w &&
-      a.x + a.w > b.x &&
-      a.y < b.y + b.h &&
-      a.y + a.h > b.y
+    function playClickSound() {
+        playTone(700, 0.05, 0.025, "square");
+    }
+
+    function playJumpSound() {
+        playTone(420, 0.09, 0.035, "sine");
+        setTimeout(() => playTone(650, 0.08, 0.025, "sine"), 60);
+    }
+
+    function playCrashSound() {
+        if (!soundEnabled) return;
+
+        playTone(180, 0.3, 0.06, "sawtooth");
+        setTimeout(() => playTone(90, 0.4, 0.04, "square"), 120);
+    }
+
+    function playScoreSound() {
+        playTone(950, 0.05, 0.025, "sine");
+    }
+
+    safeAddEvent(soundToggle, "click", () => {
+        soundEnabled = !soundEnabled;
+
+        if (soundIcon) {
+            soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
+        }
+
+        if (soundLabel) {
+            soundLabel.textContent = soundEnabled ? "SOUND ON" : "SOUND OFF";
+        }
+
+        if (soundEnabled) {
+            playClickSound();
+        }
+    });
+
+    // =====================================================
+    // 3. TOAST NOTIFICATION
+    // =====================================================
+
+    let toastTimer = null;
+
+    function showToast(message) {
+        let toast = $("cyberToast");
+
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "cyberToast";
+            toast.className = "cyber-toast";
+
+            Object.assign(toast.style, {
+                position: "fixed",
+                bottom: "25px",
+                left: "50%",
+                transform: "translateX(-50%) translateY(20px)",
+                padding: "12px 20px",
+                background: "rgba(4, 15, 25, 0.95)",
+                color: "#00f5ff",
+                border: "1px solid rgba(0,245,255,0.35)",
+                borderRadius: "8px",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                zIndex: "999999",
+                opacity: "0",
+                transition: "all 0.3s ease",
+                textAlign: "center",
+                maxWidth: "90vw"
+            });
+
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+        toast.style.opacity = "1";
+        toast.style.transform = "translateX(-50%) translateY(0)";
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(-50%) translateY(20px)";
+        }, 2600);
+    }
+
+    // =====================================================
+    // 4. NAVIGATION
+    // =====================================================
+
+    const menuToggle = $("menuToggle");
+    const navMenu = $("navMenu");
+
+    safeAddEvent(menuToggle, "click", () => {
+        if (!navMenu) return;
+
+        navMenu.classList.toggle("active");
+        menuToggle.classList.toggle("active");
+
+        playClickSound();
+    });
+
+    document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+            navMenu?.classList.remove("active");
+            menuToggle?.classList.remove("active");
+
+            playClickSound();
+        });
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener("click", (event) => {
+        if (!navMenu || !menuToggle) return;
+
+        if (
+            navMenu.classList.contains("active") &&
+            !navMenu.contains(event.target) &&
+            !menuToggle.contains(event.target)
+        ) {
+            navMenu.classList.remove("active");
+            menuToggle.classList.remove("active");
+        }
+    });
+
+    // =====================================================
+    // 5. ACTIVE NAVIGATION ON SCROLL
+    // =====================================================
+
+    const sections = document.querySelectorAll("section[id]");
+    const navLinks = document.querySelectorAll(".nav-link");
+
+    if ("IntersectionObserver" in window) {
+        const sectionObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+
+                    const sectionId = entry.target.id;
+
+                    navLinks.forEach((link) => {
+                        link.classList.remove("active");
+
+                        if (
+                            link.getAttribute("href") ===
+                            "#" + sectionId
+                        ) {
+                            link.classList.add("active");
+                        }
+                    });
+                });
+            },
+            {
+                rootMargin: "-30% 0px -60% 0px",
+                threshold: 0
+            }
+        );
+
+        sections.forEach((section) => {
+            sectionObserver.observe(section);
+        });
+    }
+
+    // =====================================================
+    // 6. SCROLL REVEAL ANIMATIONS
+    // =====================================================
+
+    const revealElements = document.querySelectorAll(
+        ".reveal, .reveal-left, .reveal-right"
     );
-  }
 
-  /* --------------------------------------------------
-     GAME RESET
-  -------------------------------------------------- */
+    function revealAll() {
+        revealElements.forEach((element) => {
+            const rect = element.getBoundingClientRect();
 
-  function resetGame() {
-
-    dino.y = GROUND_Y - dino.standH;
-    dino.velY = 0;
-    dino.jumping = false;
-    dino.ducking = false;
-    dino.legTimer = 0;
-
-    obstacles = [];
-    speed = INITIAL_SPEED;
-    score = 0;
-    spawnTimer = 70;
-
-    gameOver = false;
-    gameRunning = true;
-    gameStarted = true;
-
-    lastTime = performance.now();
-
-    $("gameOverlay").classList.add("hidden");
-    $("gameOverlayTitle").textContent = "DINO RUNNER";
-    $("gameOverlayText").textContent = "Run, jump and survive.";
-
-    updateGameUI();
-
-    if (animationId) {
-      cancelAnimationFrame(animationId);
+            if (rect.top < window.innerHeight * 0.92) {
+                element.classList.add("revealed");
+                element.classList.add("active");
+            }
+        });
     }
 
-    animationId = requestAnimationFrame(gameLoop);
-  }
+    if ("IntersectionObserver" in window) {
+        const revealObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("revealed");
+                        entry.target.classList.add("active");
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            },
+            {
+                threshold: 0.12
+            }
+        );
 
-  /* --------------------------------------------------
-     GAME OVER
-  -------------------------------------------------- */
-
-  function endGame() {
-
-    if (gameOver) return;
-
-    gameOver = true;
-    gameRunning = false;
-
-    crashSound();
-
-    const finalScore = Math.floor(score);
-
-    if (finalScore > highScore) {
-      highScore = finalScore;
-
-      localStorage.setItem(
-        "cyberDinoHighScore",
-        String(highScore)
-      );
-
-      $("gameOverlayTitle").textContent = "NEW HIGH SCORE!";
+        revealElements.forEach((element) => {
+            revealObserver.observe(element);
+        });
     } else {
-      $("gameOverlayTitle").textContent = "GAME OVER";
+        revealAll();
     }
 
-    $("gameOverlayText").textContent =
-      "Score: " + String(finalScore).padStart(5, "0") +
-      " — Press restart to try again.";
+    safeAddEvent(window, "scroll", revealAll, { passive: true });
 
-    $("gameStartButton").textContent = "PLAY AGAIN";
+    // =====================================================
+    // 7. PARTICLE SYSTEM
+    // =====================================================
 
-    $("gameOverlay").classList.remove("hidden");
+    const particleCanvas = $("particleCanvas");
+    const particleCtx = particleCanvas
+        ? particleCanvas.getContext("2d")
+        : null;
 
-    updateGameUI();
-  }
+    let particles = [];
+    let particleAnimationStarted = false;
+    let mouse = {
+        x: null,
+        y: null,
+        radius: 120
+    };
 
-  /* --------------------------------------------------
-     GAME UI
-  -------------------------------------------------- */
+    function resizeParticleCanvas() {
+        if (!particleCanvas || !particleCtx) return;
 
-  function updateGameUI() {
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
 
-    $("gameScore").textContent = String(Math.floor(score)).padStart(5, "0");
-    $("highScore").textContent = String(highScore).padStart(5, "0");
+        createParticles();
+    }
 
-    $("gameSpeed").textContent =
-      (speed / INITIAL_SPEED).toFixed(1) + "x";
-  }
+    function createParticles() {
+        if (!particleCanvas) return;
 
-  $("gameStartButton").addEventListener("click", () => {
-    clickSound();
-    resetGame();
-  });
+        particles = [];
 
-  $("restartGameButton").addEventListener("click", () => {
-    clickSound();
-    resetGame();
-  });
+        const count = Math.min(
+            Math.floor((window.innerWidth * window.innerHeight) / 12000),
+            110
+        );
 
-  /* --------------------------------------------------
-     INPUT
-  -------------------------------------------------- */
-
-  function jump() {
-    if (!gameRunning) return;
-    dino.jump();
-  }
-
-  function duck(value) {
-    dino.setDuck(value);
-  }
-
-  window.addEventListener("keydown", e => {
-
-    // Don't capture keys when typing into form fields
-    if (
-      e.target.tagName === "INPUT" ||
-      e.target.tagName === "TEXTAREA"
-    ) return;
-
-    if (e.code === "Space" || e.code === "ArrowUp") {
-      e.preventDefault();
-
-      if (!gameRunning) {
-        if (gameStarted && gameOver) {
-          resetGame();
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: Math.random() * particleCanvas.width,
+                y: Math.random() * particleCanvas.height,
+                size: Math.random() * 2 + 0.5,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5,
+                opacity: Math.random() * 0.5 + 0.2
+            });
         }
-      } else {
+    }
+
+    function drawParticles() {
+        if (!particleCanvas || !particleCtx) return;
+
+        particleCtx.clearRect(
+            0,
+            0,
+            particleCanvas.width,
+            particleCanvas.height
+        );
+
+        particles.forEach((particle, index) => {
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+
+            if (particle.x < 0) particle.x = particleCanvas.width;
+            if (particle.x > particleCanvas.width) particle.x = 0;
+
+            if (particle.y < 0) particle.y = particleCanvas.height;
+            if (particle.y > particleCanvas.height) particle.y = 0;
+
+            // Mouse interaction
+            if (mouse.x !== null && mouse.y !== null) {
+                const dx = particle.x - mouse.x;
+                const dy = particle.y - mouse.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < mouse.radius && distance > 0) {
+                    const force = (mouse.radius - distance) / mouse.radius;
+
+                    particle.x += (dx / distance) * force * 2;
+                    particle.y += (dy / distance) * force * 2;
+                }
+            }
+
+            particleCtx.beginPath();
+            particleCtx.arc(
+                particle.x,
+                particle.y,
+                particle.size,
+                0,
+                Math.PI * 2
+            );
+
+            particleCtx.fillStyle =
+                `rgba(0, 245, 255, ${particle.opacity})`;
+
+            particleCtx.fill();
+
+            // Connect nearby particles
+            for (let j = index + 1; j < particles.length; j++) {
+                const other = particles[j];
+
+                const dx = particle.x - other.x;
+                const dy = particle.y - other.y;
+
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 115) {
+                    const opacity = 0.12 * (1 - distance / 115);
+
+                    particleCtx.beginPath();
+                    particleCtx.moveTo(particle.x, particle.y);
+                    particleCtx.lineTo(other.x, other.y);
+
+                    particleCtx.strokeStyle =
+                        `rgba(0, 245, 255, ${opacity})`;
+
+                    particleCtx.lineWidth = 0.6;
+                    particleCtx.stroke();
+                }
+            }
+        });
+
+        requestAnimationFrame(drawParticles);
+    }
+
+    function initParticles() {
+        if (particleAnimationStarted) return;
+
+        particleAnimationStarted = true;
+
+        resizeParticleCanvas();
+        drawParticles();
+    }
+
+    safeAddEvent(window, "resize", resizeParticleCanvas);
+
+    safeAddEvent(window, "mousemove", (event) => {
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+    });
+
+    safeAddEvent(window, "mouseout", () => {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    safeAddEvent(window, "touchmove", (event) => {
+        if (event.touches.length > 0) {
+            mouse.x = event.touches[0].clientX;
+            mouse.y = event.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    // =====================================================
+    // 8. CONTACT FORM
+    // =====================================================
+
+    const contactForm = $("contactForm");
+    const contactName = $("contactName");
+    const contactEmail = $("contactEmail");
+    const contactMessage = $("contactMessage");
+    const formStatus = $("formStatus");
+
+    safeAddEvent(contactForm, "submit", (event) => {
+        event.preventDefault();
+
+        const name = contactName?.value.trim() || "";
+        const email = contactEmail?.value.trim() || "";
+        const message = contactMessage?.value.trim() || "";
+
+        if (!name || !email || !message) {
+            if (formStatus) {
+                formStatus.textContent =
+                    "Please complete all fields.";
+            }
+
+            showToast("PLEASE COMPLETE ALL FIELDS");
+            return;
+        }
+
+        if (!email.includes("@") || !email.includes(".")) {
+            if (formStatus) {
+                formStatus.textContent =
+                    "Please enter a valid email address.";
+            }
+
+            showToast("INVALID EMAIL ADDRESS");
+            return;
+        }
+
+        // Replace this with your actual email
+        const destinationEmail = "dipinraj@example.com";
+
+        const subject = encodeURIComponent(
+            `Portfolio Contact — ${name}`
+        );
+
+        const body = encodeURIComponent(
+            `Name: ${name}\n` +
+            `Email: ${email}\n\n` +
+            `Message:\n${message}`
+        );
+
+        const mailtoURL =
+            `mailto:${destinationEmail}?subject=${subject}&body=${body}`;
+
+        if (formStatus) {
+            formStatus.textContent =
+                "Opening your email application...";
+        }
+
+        window.location.href = mailtoURL;
+
+        showToast("MESSAGE PREPARED");
+
+        contactForm.reset();
+    });
+
+    // =====================================================
+    // 9. GAME — CYBER DINO RUNNER
+    // =====================================================
+
+    const gameCanvas = $("gameCanvas");
+    const gameCtx = gameCanvas
+        ? gameCanvas.getContext("2d")
+        : null;
+
+    const gameOverlay = $("gameOverlay");
+    const gameOverlayTitle = $("gameOverlayTitle");
+    const gameOverlayText = $("gameOverlayText");
+    const gameStartButton = $("gameStartButton");
+
+    const gameScoreElement = $("gameScore");
+    const highScoreElement = $("highScore");
+    const gameSpeedElement = $("gameSpeed");
+
+    const jumpButton = $("jumpButton");
+    const duckButton = $("duckButton");
+    const restartGameButton = $("restartGameButton");
+
+    const GAME_WIDTH = 800;
+    const GAME_HEIGHT = 300;
+    const GROUND_Y = 245;
+
+    let gameRunning = false;
+    let gameStarted = false;
+    let gameOver = false;
+
+    let gameScore = 0;
+    let gameSpeed = 7;
+    let highScore = 0;
+
+    let lastGameTime = 0;
+    let obstacleTimer = 0;
+    let nextObstacleTime = 1100;
+    let groundOffset = 0;
+
+    let currentTheme = 0;
+    let lastThemeScore = 0;
+
+    let obstacles = [];
+
+    const GRAVITY = 0.85;
+    const JUMP_FORCE = -14.5;
+    const FAST_FALL = 2.2;
+
+    const themes = [
+        {
+            background: "#071018",
+            ground: "#00f5ff",
+            obstacle: "#00f5ff",
+            player: "#00f5ff",
+            accent: "#39ff14"
+        },
+        {
+            background: "#08150c",
+            ground: "#39ff14",
+            obstacle: "#39ff14",
+            player: "#b4ff8c",
+            accent: "#00f5ff"
+        },
+        {
+            background: "#10091b",
+            ground: "#bf5fff",
+            obstacle: "#bf5fff",
+            player: "#e5b8ff",
+            accent: "#ff4fd8"
+        },
+        {
+            background: "#170b0b",
+            ground: "#ff4d6d",
+            obstacle: "#ff4d6d",
+            player: "#ffb3c1",
+            accent: "#ffaa00"
+        }
+    ];
+
+    let player = {
+        x: 70,
+        y: GROUND_Y - 46,
+        width: 34,
+        height: 46,
+        standingHeight: 46,
+        duckHeight: 26,
+        velocityY: 0,
+        jumping: false,
+        ducking: false,
+        grounded: true
+    };
+
+    // Load high score
+    try {
+        highScore = Number(
+            localStorage.getItem("cyberDinoHighScore") || 0
+        );
+    } catch (error) {
+        highScore = 0;
+    }
+
+    if (highScoreElement) {
+        highScoreElement.textContent = highScore;
+    }
+
+    // Canvas scaling
+    function resizeGameCanvas() {
+        if (!gameCanvas || !gameCtx) return;
+
+        const rect = gameCanvas.getBoundingClientRect();
+
+        if (rect.width === 0) return;
+
+        const ratio = GAME_WIDTH / GAME_HEIGHT;
+
+        let width = rect.width;
+        let height = width / ratio;
+
+        if (height > rect.height && rect.height > 0) {
+            height = rect.height;
+            width = height * ratio;
+        }
+
+        gameCanvas.width = GAME_WIDTH;
+        gameCanvas.height = GAME_HEIGHT;
+
+        gameCanvas.style.width = "100%";
+    }
+
+    safeAddEvent(window, "resize", resizeGameCanvas);
+    resizeGameCanvas();
+
+    // =====================================================
+    // GAME RESET
+    // =====================================================
+
+    function resetGame() {
+        gameScore = 0;
+        gameSpeed = 7;
+
+        obstacleTimer = 0;
+        nextObstacleTime = 1000;
+
+        groundOffset = 0;
+        currentTheme = 0;
+        lastThemeScore = 0;
+
+        obstacles = [];
+
+        player.x = 70;
+        player.y = GROUND_Y - player.standingHeight;
+        player.width = 34;
+        player.height = player.standingHeight;
+
+        player.velocityY = 0;
+        player.jumping = false;
+        player.ducking = false;
+        player.grounded = true;
+
+        gameOver = false;
+        gameRunning = false;
+        gameStarted = false;
+
+        updateGameHUD();
+        drawGame();
+    }
+
+    // =====================================================
+    // GAME START
+    // =====================================================
+
+    function startGame() {
+        if (gameRunning) return;
+
+        resetGame();
+
+        gameRunning = true;
+        gameStarted = true;
+        gameOver = false;
+
+        if (gameOverlay) {
+            gameOverlay.classList.add("hidden");
+            gameOverlay.style.display = "none";
+        }
+
+        playClickSound();
+
+        lastGameTime = performance.now();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    safeAddEvent(gameStartButton, "click", startGame);
+    safeAddEvent(restartGameButton, "click", startGame);
+
+    // =====================================================
+    // PLAYER CONTROLS
+    // =====================================================
+
+    function jump() {
+        if (!gameStarted || gameOver) return;
+
+        if (player.grounded && !player.ducking) {
+            player.velocityY = JUMP_FORCE;
+            player.jumping = true;
+            player.grounded = false;
+
+            playJumpSound();
+        }
+    }
+
+    function duckStart() {
+        if (!gameStarted || gameOver) return;
+
+        player.ducking = true;
+
+        if (player.grounded) {
+            player.height = player.duckHeight;
+            player.y = GROUND_Y - player.duckHeight;
+        }
+    }
+
+    function duckEnd() {
+        player.ducking = false;
+
+        if (player.grounded) {
+            player.height = player.standingHeight;
+            player.y = GROUND_Y - player.standingHeight;
+        }
+    }
+
+    safeAddEvent(jumpButton, "pointerdown", (event) => {
+        event.preventDefault();
         jump();
-      }
-    }
-
-    if (e.code === "ArrowDown") {
-      e.preventDefault();
-      duck(true);
-    }
-
-  });
-
-  window.addEventListener("keyup", e => {
-    if (e.code === "ArrowDown") {
-      duck(false);
-    }
-  });
-
-  /* TOUCH JUMP */
-
-  const jumpButton = $("jumpButton");
-  const duckButton = $("duckButton");
-
-  jumpButton.addEventListener("pointerdown", e => {
-    e.preventDefault();
-    jump();
-  });
-
-  /* TOUCH DUCK */
-
-  duckButton.addEventListener("pointerdown", e => {
-    e.preventDefault();
-    duck(true);
-  });
-
-  ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
-    duckButton.addEventListener(eventName, () => duck(false));
-  });
-
-  /* --------------------------------------------------
-     GAME DRAWING
-  -------------------------------------------------- */
-
-  function drawBackground(night) {
-
-    ctx.fillStyle = night ? "#07101b" : "#eaf7ff";
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Cyber grid
-    ctx.strokeStyle = night
-      ? "rgba(0,240,255,.08)"
-      : "rgba(0,140,180,.09)";
-
-    ctx.lineWidth = 1;
-
-    for (let x = 0; x < GAME_WIDTH; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, GAME_HEIGHT);
-      ctx.stroke();
-    }
-
-    for (let y = 0; y < GAME_HEIGHT; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(GAME_WIDTH, y);
-      ctx.stroke();
-    }
-
-    // Ground
-    ctx.strokeStyle = night ? "#00f0ff" : "#456579";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(0, GROUND_Y);
-    ctx.lineTo(GAME_WIDTH, GROUND_Y);
-    ctx.stroke();
-
-    // Ground markings
-    ctx.fillStyle = night ? "rgba(0,240,255,.25)" : "rgba(40,120,150,.25)";
-
-    for (let x = 0; x < GAME_WIDTH; x += 60) {
-      const offset = (score * 4) % 60;
-
-      ctx.fillRect(x - offset, GROUND_Y + 12, 20, 2);
-    }
-
-    // Small decorative skyline
-    ctx.fillStyle = night
-      ? "rgba(0,240,255,.04)"
-      : "rgba(40,120,150,.07)";
-
-    for (let x = 0; x < GAME_WIDTH; x += 75) {
-      const h = 20 + ((x * 17) % 55);
-
-      ctx.fillRect(x, GROUND_Y - h, 45, h);
-    }
-  }
-
-  function drawDino() {
-
-    const r = dino.rect;
-
-    const night = (Math.floor(score / 400) % 2) === 1;
-
-    ctx.fillStyle = night ? "#00f0ff" : "#007b9b";
-
-    // Body
-    roundRect(ctx, r.x, r.y, r.w, r.h, 4);
-
-    if (dino.ducking && !dino.jumping) {
-
-      // Duck head / eye
-      ctx.fillRect(r.x + r.w - 7, r.y + 2, 12, 12);
-
-      ctx.fillStyle = night ? "#07101b" : "#eaf7ff";
-      ctx.fillRect(r.x + r.w - 8, r.y + 6, 4, 4);
-
-    } else {
-
-      // Snout
-      ctx.fillStyle = night ? "#00f0ff" : "#007b9b";
-      ctx.fillRect(r.x + r.w - 6, r.y + 2, 12, 14);
-
-      // Eye
-      ctx.fillStyle = night ? "#07101b" : "#eaf7ff";
-      ctx.fillRect(r.x + r.w - 4, r.y + 6, 4, 4);
-
-    }
-
-    // Animated legs
-    if (!dino.jumping) {
-
-      const legX = dino.legTimer % 12 < 6
-        ? r.x + 8
-        : r.x + 20;
-
-      ctx.strokeStyle = night ? "#00f0ff" : "#007b9b";
-      ctx.lineWidth = 3;
-
-      ctx.beginPath();
-      ctx.moveTo(legX, r.y + r.h);
-      ctx.lineTo(legX, r.y + r.h + 5);
-      ctx.stroke();
-    }
-
-  }
-
-  function drawCactus(obs) {
-
-    ctx.fillStyle = "#00ff9d";
-
-    if (obs.kind === "cactus_small") {
-
-      roundRect(
-        ctx,
-        obs.x + obs.w / 3,
-        obs.y,
-        obs.w / 3,
-        obs.h,
-        3
-      );
-
-      roundRect(
-        ctx,
-        obs.x - 3,
-        obs.y + obs.h / 3,
-        obs.w,
-        obs.h / 4,
-        3
-      );
-
-    } else {
-
-      roundRect(
-        ctx,
-        obs.x + 10,
-        obs.y,
-        15,
-        obs.h,
-        3
-      );
-
-      roundRect(
-        ctx,
-        obs.x,
-        obs.y + obs.h / 2,
-        obs.w,
-        9,
-        3
-      );
-
-      roundRect(
-        ctx,
-        obs.x + 3,
-        obs.y + 8,
-        8,
-        12,
-        3
-      );
-
-    }
-
-  }
-
-  function drawBird(obs) {
-
-    ctx.fillStyle = "#ff4fc8";
-
-    // Bird body
-    roundRect(
-      ctx,
-      obs.x,
-      obs.y + 8,
-      obs.w,
-      10,
-      3
-    );
-
-    // Wing animation
-    const wingY = obs.wingTimer < 8
-      ? obs.y
-      : obs.y + 14;
-
-    ctx.beginPath();
-    ctx.moveTo(obs.x + 10, obs.y + 10);
-    ctx.lineTo(obs.x + 24, obs.y + 10);
-    ctx.lineTo(obs.x + 16, wingY);
-    ctx.closePath();
-    ctx.fill();
-
-    // Eye
-    ctx.fillStyle = "#07101b";
-    ctx.fillRect(obs.x + obs.w - 8, obs.y + 10, 3, 3);
-  }
-
-  function drawObstacles() {
-    obstacles.forEach(obs => {
-      if (obs.kind === "bird") {
-        drawBird(obs);
-      } else {
-        drawCactus(obs);
-      }
-    });
-  }
-
-  function roundRect(context, x, y, w, h, radius) {
-
-    const r = Math.min(radius, w / 2, h / 2);
-
-    context.beginPath();
-    context.moveTo(x + r, y);
-    context.lineTo(x + w - r, y);
-    context.quadraticCurveTo(x + w, y, x + w, y + r);
-    context.lineTo(x + w, y + h - r);
-    context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    context.lineTo(x + r, y + h);
-    context.quadraticCurveTo(x, y + h, x, y + h - r);
-    context.lineTo(x, y + r);
-    context.quadraticCurveTo(x, y, x + r, y);
-    context.closePath();
-    context.fill();
-  }
-
-  /* --------------------------------------------------
-     GAME LOOP
-  -------------------------------------------------- */
-
-  function gameLoop(timestamp) {
-
-    if (!gameRunning) return;
-
-    const dt = Math.min(timestamp - lastTime || 16.67, 40);
-    lastTime = timestamp;
-
-    const factor = dt / 16.667;
-
-    // Update player
-    dino.update(dt);
-
-    // Score
-    score += speed * .04 * factor;
-
-    // Speed progression
-    speed = Math.min(
-      MAX_SPEED,
-      INITIAL_SPEED + score / 180
-    );
-
-    // Obstacle spawning
-    spawnTimer -= factor;
-
-    if (spawnTimer <= 0) {
-
-      let kind;
-
-      if (score > 150 && Math.random() < .35) {
-        kind = "bird";
-      } else {
-        kind = Math.random() < .5
-          ? "cactus_small"
-          : "cactus_cluster";
-      }
-
-      obstacles.push(createObstacle(kind));
-
-      const minGap = Math.floor(45 + speed * 1.5);
-
-      spawnTimer = minGap + Math.random() * 45;
-    }
-
-    // Move obstacles and collision
-    obstacles.forEach(obs => {
-
-      obs.x -= speed * factor;
-      obs.wingTimer = (obs.wingTimer + factor) % 16;
-
-      if (intersects(dino.rect, obs.rect())) {
-        endGame();
-      }
-
     });
 
-    obstacles = obstacles.filter(obs => obs.x + obs.w > -20);
+    safeAddEvent(duckButton, "pointerdown", (event) => {
+        event.preventDefault();
+        duckStart();
+    });
 
-    // Day/night every 400 score points
-    const night = (Math.floor(score / 400) % 2) === 1;
+    safeAddEvent(duckButton, "pointerup", duckEnd);
+    safeAddEvent(duckButton, "pointercancel", duckEnd);
+    safeAddEvent(duckButton, "pointerleave", duckEnd);
 
-    drawBackground(night);
-    drawDino();
-    drawObstacles();
+    safeAddEvent(document, "keydown", (event) => {
+        if (
+            event.code === "Space" ||
+            event.code === "ArrowUp"
+        ) {
+            if (
+                gameCanvas &&
+                gameCanvas.getBoundingClientRect().top <
+                window.innerHeight
+            ) {
+                event.preventDefault();
 
-    updateGameUI();
+                if (!gameStarted && !gameOver) {
+                    startGame();
+                } else {
+                    jump();
+                }
+            }
+        }
 
-    if (!gameOver) {
-      animationId = requestAnimationFrame(gameLoop);
+        if (event.code === "ArrowDown") {
+            event.preventDefault();
+            duckStart();
+        }
+
+        if (event.code === "KeyR" && gameOver) {
+            startGame();
+        }
+    });
+
+    safeAddEvent(document, "keyup", (event) => {
+        if (event.code === "ArrowDown") {
+            duckEnd();
+        }
+    });
+
+    // =====================================================
+    // OBSTACLES
+    // =====================================================
+
+    function spawnObstacle() {
+        const birdAllowed = gameScore > 150;
+        const isBird = birdAllowed && Math.random() < 0.35;
+
+        if (isBird) {
+            const altitudeOptions = [
+                GROUND_Y - 90,
+                GROUND_Y - 120,
+                GROUND_Y - 65
+            ];
+
+            obstacles.push({
+                type: "bird",
+                x: GAME_WIDTH + 30,
+                y: altitudeOptions[
+                    Math.floor(Math.random() * altitudeOptions.length)
+                ],
+                width: 38,
+                height: 24,
+                wingFrame: 0
+            });
+
+            return;
+        }
+
+        const randomType = Math.random();
+
+        if (randomType < 0.5) {
+            obstacles.push({
+                type: "cactus",
+                x: GAME_WIDTH + 30,
+                y: GROUND_Y - 42,
+                width: 22,
+                height: 42
+            });
+        } else {
+            obstacles.push({
+                type: "cluster",
+                x: GAME_WIDTH + 30,
+                y: GROUND_Y - 36,
+                width: 46,
+                height: 36
+            });
+        }
     }
-  }
 
-  /* --------------------------------------------------
-     INITIAL GAME SCREEN
-  -------------------------------------------------- */
+    // =====================================================
+    // COLLISION DETECTION
+    // =====================================================
 
-  drawBackground(false);
-  drawDino();
+    function collisionCheck(playerBox, obstacleBox) {
+        const inset = 4;
 
-  // Initial welcome screen
-  $("gameOverlay").classList.remove("hidden");
+        return (
+            playerBox.x + inset <
+                obstacleBox.x + obstacleBox.width - inset &&
+            playerBox.x + playerBox.width - inset >
+                obstacleBox.x + inset &&
+            playerBox.y + inset <
+                obstacleBox.y + obstacleBox.height - inset &&
+            playerBox.y + playerBox.height - inset >
+                obstacleBox.y + inset
+        );
+    }
 
-  $("gameOverlayTitle").textContent = "DINO RUNNER";
-  $("gameOverlayText").textContent =
-    "Jump over obstacles and duck under birds. Survive to beat your high score.";
+    // =====================================================
+    // GAME OVER
+    // =====================================================
 
-  $("gameStartButton").textContent = "START GAME";
+    function endGame() {
+        gameRunning = false;
+        gameOver = true;
 
-  /* ==================================================
-     CONSOLE
-  ================================================== */
+        playCrashSound();
 
-  console.log(
-    "%c DIPIN RAJ // CYBER LAB ",
-    "background:#050810;color:#00f0ff;font-size:20px;font-weight:bold;padding:10px;"
-  );
+        const finalScore = Math.floor(gameScore);
 
-  console.log(
-    "%c SYSTEM ONLINE // GAME ENGINE INITIALIZED ",
-    "color:#00ff9d;font-size:12px;"
-  );
+        if (finalScore > highScore) {
+            highScore = finalScore;
+
+            try {
+                localStorage.setItem(
+                    "cyberDinoHighScore",
+                    String(highScore)
+                );
+            } catch (error) {
+                console.warn("Could not save high score.");
+            }
+        }
+
+        updateGameHUD();
+
+        if (gameOverlay) {
+            gameOverlay.style.display = "flex";
+            gameOverlay.classList.remove("hidden");
+        }
+
+        if (gameOverlayTitle) {
+            gameOverlayTitle.textContent = "SYSTEM FAILURE";
+        }
+
+        if (gameOverlayText) {
+            gameOverlayText.textContent =
+                `Score: ${finalScore} — Try again to beat your record!`;
+        }
+
+        if (gameStartButton) {
+            gameStartButton.textContent = "RESTART GAME";
+        }
+
+        showToast(`GAME OVER — SCORE ${finalScore}`);
+    }
+
+    // =====================================================
+    // GAME HUD
+    // =====================================================
+
+    function updateGameHUD() {
+        if (gameScoreElement) {
+            gameScoreElement.textContent = Math.floor(gameScore);
+        }
+
+        if (highScoreElement) {
+            highScoreElement.textContent = highScore;
+        }
+
+        if (gameSpeedElement) {
+            gameSpeedElement.textContent =
+                `${gameSpeed.toFixed(1)}x`;
+        }
+    }
+
+    // =====================================================
+    // GAME UPDATE
+    // =====================================================
+
+    function updateGame(deltaTime) {
+        if (!gameRunning) return;
+
+        const dt = Math.min(deltaTime / 16.67, 2.5);
+
+        // Score
+        gameScore += gameSpeed * 0.04 * dt;
+
+        // Speed scaling
+        gameSpeed = Math.min(
+            18,
+            7 + gameScore / 180
+        );
+
+        // Change environment theme
+        if (gameScore - lastThemeScore >= 400) {
+            lastThemeScore = Math.floor(gameScore / 400) * 400;
+            currentTheme = (currentTheme + 1) % themes.length;
+        }
+
+        // Player physics
+        if (!player.grounded) {
+            player.velocityY += GRAVITY * dt;
+
+            player.y += player.velocityY * dt;
+
+            if (player.ducking) {
+                player.velocityY += FAST_FALL * dt;
+            }
+
+            if (
+                player.y + player.height >= GROUND_Y
+            ) {
+                player.y = GROUND_Y - player.height;
+                player.velocityY = 0;
+                player.grounded = true;
+                player.jumping = false;
+            }
+        }
+
+        // Duck dimensions
+        if (player.ducking && player.grounded) {
+            player.height = player.duckHeight;
+            player.y = GROUND_Y - player.duckHeight;
+        } else if (!player.ducking && player.grounded) {
+            player.height = player.standingHeight;
+            player.y = GROUND_Y - player.standingHeight;
+        }
+
+        // Ground movement
+        groundOffset += gameSpeed * dt;
+
+        // Spawn obstacles
+        obstacleTimer += deltaTime;
+
+        if (obstacleTimer >= nextObstacleTime) {
+            spawnObstacle();
+
+            obstacleTimer = 0;
+
+            nextObstacleTime =
+                900 + Math.random() * 900 - gameSpeed * 15;
+
+            nextObstacleTime = Math.max(
+                600,
+                nextObstacleTime
+            );
+        }
+
+        // Move obstacles
+        obstacles.forEach((obstacle) => {
+            obstacle.x -= gameSpeed * dt;
+
+            if (obstacle.type === "bird") {
+                obstacle.wingFrame += deltaTime;
+            }
+        });
+
+        // Remove old obstacles
+        obstacles = obstacles.filter(
+            (obstacle) =>
+                obstacle.x + obstacle.width > -50
+        );
+
+        // Collision
+        const playerBox = {
+            x: player.x,
+            y: player.y,
+            width: player.width,
+            height: player.height
+        };
+
+        for (const obstacle of obstacles) {
+            if (collisionCheck(playerBox, obstacle)) {
+                endGame();
+                return;
+            }
+        }
+
+        updateGameHUD();
+    }
+
+    // =====================================================
+    // DRAW GAME BACKGROUND
+    // =====================================================
+
+    function drawBackground() {
+        if (!gameCtx) return;
+
+        const theme = themes[currentTheme];
+
+        gameCtx.fillStyle = theme.background;
+        gameCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // Grid
+        gameCtx.strokeStyle = "rgba(0,245,255,0.07)";
+        gameCtx.lineWidth = 1;
+
+        for (let x = 0; x < GAME_WIDTH; x += 40) {
+            gameCtx.beginPath();
+            gameCtx.moveTo(x, 0);
+            gameCtx.lineTo(x, GAME_HEIGHT);
+            gameCtx.stroke();
+        }
+
+        for (let y = 0; y < GAME_HEIGHT; y += 40) {
+            gameCtx.beginPath();
+            gameCtx.moveTo(0, y);
+            gameCtx.lineTo(GAME_WIDTH, y);
+            gameCtx.stroke();
+        }
+
+        // Decorative glowing orb
+        const gradient = gameCtx.createRadialGradient(
+            650, 70, 5,
+            650, 70, 70
+        );
+
+        gradient.addColorStop(
+            0,
+            `${theme.accent}22`
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(0,0,0,0)"
+        );
+
+        gameCtx.fillStyle = gradient;
+        gameCtx.fillRect(570, 0, 160, 150);
+
+        // Ground
+        gameCtx.strokeStyle = theme.ground;
+        gameCtx.lineWidth = 2;
+
+        gameCtx.shadowBlur = 12;
+        gameCtx.shadowColor = theme.ground;
+
+        gameCtx.beginPath();
+        gameCtx.moveTo(0, GROUND_Y);
+        gameCtx.lineTo(GAME_WIDTH, GROUND_Y);
+        gameCtx.stroke();
+
+        gameCtx.shadowBlur = 0;
+
+        // Ground dashes
+        gameCtx.fillStyle = theme.ground;
+
+        for (let i = 0; i < 30; i++) {
+            const dashX =
+                ((i * 45 - groundOffset) % GAME_WIDTH + GAME_WIDTH)
+                % GAME_WIDTH;
+
+            gameCtx.fillRect(
+                dashX,
+                GROUND_Y + 10,
+                18,
+                2
+            );
+        }
+    }
+
+    // =====================================================
+    // DRAW PLAYER
+    // =====================================================
+
+    function drawPlayer() {
+        if (!gameCtx) return;
+
+        const theme = themes[currentTheme];
+
+        gameCtx.save();
+
+        gameCtx.fillStyle = theme.player;
+        gameCtx.shadowBlur = 12;
+        gameCtx.shadowColor = theme.player;
+
+        const x = player.x;
+        const y = player.y;
+        const w = player.width;
+        const h = player.height;
+
+        // Main body
+        gameCtx.fillRect(x + 4, y + 8, w - 8, h - 8);
+
+        // Head
+        if (!player.ducking) {
+            gameCtx.fillRect(x + 14, y, 22, 20);
+
+            // Eye
+            gameCtx.fillStyle = "#071018";
+            gameCtx.fillRect(x + 28, y + 7, 4, 4);
+
+            // Tail
+            gameCtx.fillStyle = theme.player;
+            gameCtx.fillRect(x, y + 15, 8, 7);
+
+            // Legs
+            gameCtx.fillRect(x + 7, y + h - 6, 8, 8);
+            gameCtx.fillRect(x + 22, y + h - 6, 8, 8);
+        } else {
+            gameCtx.fillRect(x + 14, y + 2, 28, 14);
+
+            // Eye
+            gameCtx.fillStyle = "#071018";
+            gameCtx.fillRect(x + 34, y + 6, 4, 3);
+
+            // Duck legs
+            gameCtx.fillStyle = theme.player;
+            gameCtx.fillRect(x + 6, y + h - 5, 12, 5);
+            gameCtx.fillRect(x + 22, y + h - 5, 12, 5);
+        }
+
+        gameCtx.restore();
+    }
+
+    // =====================================================
+    // DRAW CACTUS
+    // =====================================================
+
+    function drawCactus(obstacle) {
+        if (!gameCtx) return;
+
+        const theme = themes[currentTheme];
+
+        gameCtx.save();
+
+        gameCtx.fillStyle = theme.obstacle;
+        gameCtx.shadowBlur = 10;
+        gameCtx.shadowColor = theme.obstacle;
+
+        if (obstacle.type === "cactus") {
+            const x = obstacle.x;
+            const y = obstacle.y;
+
+            // Main cactus
+            gameCtx.fillRect(x + 7, y, 9, obstacle.height);
+
+            // Arms
+            gameCtx.fillRect(x, y + 12, 7, 7);
+            gameCtx.fillRect(x, y + 8, 4, 12);
+
+            gameCtx.fillRect(x + 16, y + 18, 7, 7);
+            gameCtx.fillRect(x + 19, y + 12, 4, 14);
+        } else {
+            const x = obstacle.x;
+            const y = obstacle.y;
+
+            // Cluster of cacti
+            gameCtx.fillRect(x + 4, y + 9, 10, 27);
+            gameCtx.fillRect(x + 17, y, 12, 36);
+            gameCtx.fillRect(x + 32, y + 12, 10, 24);
+
+            gameCtx.fillRect(x, y + 16, 6, 6);
+            gameCtx.fillRect(x + 1, y + 11, 4, 13);
+
+            gameCtx.fillRect(x + 28, y + 18, 8, 6);
+            gameCtx.fillRect(x + 32, y + 13, 4, 12);
+        }
+
+        gameCtx.restore();
+    }
+
+    // =====================================================
+    // DRAW BIRD
+    // =====================================================
+
+    function drawBird(obstacle) {
+        if (!gameCtx) return;
+
+        const theme = themes[currentTheme];
+
+        gameCtx.save();
+
+        gameCtx.fillStyle = theme.accent;
+        gameCtx.shadowBlur = 10;
+        gameCtx.shadowColor = theme.accent;
+
+        const x = obstacle.x;
+        const y = obstacle.y;
+
+        // Body
+        gameCtx.fillRect(x + 8, y + 8, 22, 12);
+
+        // Head
+        gameCtx.fillRect(x + 26, y + 5, 10, 10);
+
+        // Beak
+        gameCtx.fillRect(x + 36, y + 9, 5, 3);
+
+        // Wing animation
+        const wingUp =
+            Math.floor(obstacle.wingFrame / 120) % 2 === 0;
+
+        if (wingUp) {
+            gameCtx.fillRect(x + 12, y, 15, 8);
+        } else {
+            gameCtx.fillRect(x + 12, y + 15, 15, 8);
+        }
+
+        // Eye
+        gameCtx.fillStyle = "#071018";
+        gameCtx.fillRect(x + 30, y + 8, 3, 3);
+
+        gameCtx.restore();
+    }
+
+    // =====================================================
+    // DRAW GAME
+    // =====================================================
+
+    function drawGame() {
+        if (!gameCtx) return;
+
+        drawBackground();
+
+        obstacles.forEach((obstacle) => {
+            if (obstacle.type === "bird") {
+                drawBird(obstacle);
+            } else {
+                drawCactus(obstacle);
+            }
+        });
+
+        drawPlayer();
+
+        // Score inside canvas
+        gameCtx.save();
+
+        gameCtx.fillStyle = themes[currentTheme].accent;
+        gameCtx.font = "bold 14px monospace";
+        gameCtx.textAlign = "right";
+
+        gameCtx.fillText(
+            `SCORE ${Math.floor(gameScore)}`,
+            GAME_WIDTH - 20,
+            25
+        );
+
+        gameCtx.fillText(
+            `SPEED ${gameSpeed.toFixed(1)}x`,
+            GAME_WIDTH - 20,
+            45
+        );
+
+        gameCtx.restore();
+    }
+
+    // =====================================================
+    // GAME LOOP
+    // =====================================================
+
+    function gameLoop(timestamp) {
+        if (!gameRunning) return;
+
+        const deltaTime = timestamp - lastGameTime;
+
+        lastGameTime = timestamp;
+
+        updateGame(deltaTime);
+        drawGame();
+
+        if (gameRunning) {
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    // =====================================================
+    // INITIAL GAME DISPLAY
+    // =====================================================
+
+    if (gameOverlay) {
+        gameOverlay.style.display = "flex";
+    }
+
+    if (gameOverlayTitle) {
+        gameOverlayTitle.textContent = "CYBER RUNNER";
+    }
+
+    if (gameOverlayText) {
+        gameOverlayText.textContent =
+            "Jump over obstacles. Duck under incoming drones. Survive!";
+    }
+
+    if (gameStartButton) {
+        gameStartButton.textContent = "START GAME";
+    }
+
+    resetGame();
+
+    // =====================================================
+    // 10. CLICK SOUNDS FOR UI
+    // =====================================================
+
+    document.querySelectorAll(
+        "button, .project-card, .skill-card, .social-link"
+    ).forEach((element) => {
+        if (
+            element === launchButton ||
+            element === soundToggle ||
+            element === gameStartButton ||
+            element === jumpButton ||
+            element === duckButton ||
+            element === restartGameButton
+        ) {
+            return;
+        }
+
+        safeAddEvent(element, "click", () => {
+            playClickSound();
+        });
+    });
+
+    // =====================================================
+    // 11. YEAR AUTO-UPDATE
+    // =====================================================
+
+    document.querySelectorAll("[data-current-year]").forEach((element) => {
+        element.textContent = new Date().getFullYear();
+    });
+
+    const yearElement = $("currentYear");
+
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+
+    // =====================================================
+    // 12. INITIAL SYSTEM STATUS
+    // =====================================================
+
+    console.log(
+        "%c CYBER LAB PORTFOLIO ",
+        "background:#00f5ff;color:#000;font-weight:bold;padding:5px;"
+    );
+
+    console.log("System ready.");
+    console.log("Waiting for ENTER THE LAB...");
 
 });
